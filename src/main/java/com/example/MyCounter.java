@@ -7,11 +7,10 @@ import java.util.stream.Stream;
 
 import static java.util.Collections.reverseOrder;
 import static java.util.Map.Entry.comparingByValue;
-import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.summingLong;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.counting;
 import static java.util.function.Function.identity;
 import static java.util.stream.StreamSupport.stream;
 
@@ -26,7 +25,7 @@ public class MyCounter implements Counter {
             // ProducerIterator is a trivial wrapper to implement Iterator
             Iterable<Long> producerIterator = () -> new ProducerIterator(producer);
             return stream(producerIterator.spliterator(), false) // <-- true (parallel) fails badly
-                    .collect(groupingBy(identity(), mapping(initial -> 1, summingLong(i -> i.longValue()))));
+                    .collect(groupingBy(identity(), counting()));
         } finally {
             System.out.println("bin: " + (System.currentTimeMillis() - start) + "ms");
         }
