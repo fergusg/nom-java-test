@@ -6,7 +6,7 @@ Assumes `Java 8` (developed with `OpenJDK`) and recent `maven`, on `PATH`
 
 ```bash
     mvn install -DskipTests
-    java -cp target/my-app-1.0-SNAPSHOT.jar com.example.Main
+    java -ea -cp target/my-app-1.0-SNAPSHOT.jar com.example.Main
 ```
 
 ## Tests

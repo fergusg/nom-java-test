@@ -16,22 +16,7 @@ import static java.util.stream.StreamSupport.stream;
 
 public class MyCounter implements Counter {
 
-    /**
-     * Here is the pain
-     */
-    public Map<Long, Long> bin(Producer producer) {
-        final long start = System.currentTimeMillis();
-        try {
-            // ProducerIterator is a trivial wrapper to implement Iterator
-            Iterable<Long> producerIterator = () -> new ProducerIterator(producer);
-            return stream(producerIterator.spliterator(), false) // <-- true (parallel) fails badly
-                    .collect(groupingBy(identity(), counting()));
-        } finally {
-            System.out.println("bin: " + (System.currentTimeMillis() - start) + "ms");
-        }
-    }
-
-    public String getTop(int limit, Producer... producers) {
+    public String getTop(int limit, Producer ...producers) {
 
         ArrayList<Map<Long, Long>> allBinned = new ArrayList<Map<Long, Long>>();
         ArrayList<Thread> threads = new ArrayList<Thread>();
@@ -73,5 +58,20 @@ public class MyCounter implements Counter {
         return collected.entrySet().stream().sorted(reverseOrder(comparingByValue())).limit(limit)
                 .map(e -> e.getKey().toString()).collect(joining(","));
 
+    }
+
+    /**
+     * Here is the pain
+     */
+    private Map<Long, Long> bin(Producer producer) {
+        final long start = System.currentTimeMillis();
+        try {
+            // ProducerIterator is a trivial wrapper to implement Iterator
+            Iterable<Long> producerIterator = () -> new ProducerIterator(producer);
+            return stream(producerIterator.spliterator(), false) // <-- true (parallel) fails badly
+                    .collect(groupingBy(identity(), counting()));
+        } finally {
+            System.out.println("bin: " + (System.currentTimeMillis() - start) + "ms");
+        }
     }
 }
