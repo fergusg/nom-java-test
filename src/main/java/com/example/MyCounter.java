@@ -17,8 +17,6 @@ import static java.util.stream.StreamSupport.stream;
 
 public class MyCounter implements Counter {
 
-
-
     /**
      * Here is the pain
      */
@@ -32,13 +30,22 @@ public class MyCounter implements Counter {
 
     public String getTop(int limit, Producer... producers) {
         // ProducerIterator is a trivial wrapper to implement Iterator
-        Iterable<Long> producer = () -> new ProducerIterator(producers[0]); // <--- just 1st
 
-        Map<Long, Long> binned = bin(stream(producer.spliterator(), false))
-                .entrySet().stream()
-                .collect(toMap(Entry::getKey, Entry::getValue, (key, value) -> key, LinkedHashMap::new));
+        Map<Long, Long> allBinned = new LinkedHashMap<Long, Long>();
 
-        return binned.entrySet().stream().sorted(reverseOrder(comparingByValue())).limit(limit)
+        for (Producer rawProducer : producers) {
+            Iterable<Long> producer = () -> new ProducerIterator(rawProducer); // <--- just 1st
+            Map<Long, Long> binned = bin(stream(producer.spliterator(), false)).entrySet().stream()
+                    .collect(toMap(Entry::getKey, Entry::getValue, (key, value) -> key, LinkedHashMap::new));
+
+            synchronized (this) {
+                allBinned = Stream.concat(allBinned.entrySet().stream(), binned.entrySet().stream())
+                        .collect(toMap(e -> e.getKey(), e -> e.getValue(), Long::sum));
+            }
+
+        }
+        return allBinned.entrySet().stream().sorted(reverseOrder(comparingByValue())).limit(limit)
                 .map(e -> e.getKey().toString()).collect(joining(","));
+
     }
 }
