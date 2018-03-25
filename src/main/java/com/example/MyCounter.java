@@ -1,10 +1,11 @@
 package com.example;
 
-import static java.util.Collections.reverseOrder;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static java.util.Collections.reverseOrder;
 import static java.util.Map.Entry;
 import static java.util.Map.Entry.comparingByValue;
 import static java.util.stream.Collectors.mapping;
@@ -29,22 +30,48 @@ public class MyCounter implements Counter {
     }
 
     public String getTop(int limit, Producer... producers) {
-        // ProducerIterator is a trivial wrapper to implement Iterator
 
-        Map<Long, Long> allBinned = new LinkedHashMap<Long, Long>();
+        ArrayList<Map<Long, Long>> allBinned = new ArrayList<Map<Long, Long>>();
+        ArrayList<Thread> threads = new ArrayList<Thread>();
 
+        // for efficiency, assumes #cores > #producers
         for (Producer rawProducer : producers) {
-            Iterable<Long> producer = () -> new ProducerIterator(rawProducer); // <--- just 1st
-            Map<Long, Long> binned = bin(stream(producer.spliterator(), false)).entrySet().stream()
-                    .collect(toMap(Entry::getKey, Entry::getValue, (key, value) -> key, LinkedHashMap::new));
-
-            synchronized (this) {
-                allBinned = Stream.concat(allBinned.entrySet().stream(), binned.entrySet().stream())
-                        .collect(toMap(e -> e.getKey(), e -> e.getValue(), Long::sum));
-            }
-
+            Runnable runner = () -> {
+                // ProducerIterator is a trivial wrapper to implement Iterator
+                Iterable<Long> producer = () -> new ProducerIterator(rawProducer);
+                Map<Long, Long> binned = bin(stream(producer.spliterator(), false)).entrySet().stream()
+                        .collect(toMap(Entry::getKey, Entry::getValue, (key, value) -> key, LinkedHashMap::new));
+                synchronized (allBinned) {
+                    allBinned.add(binned);
+                }
+            };
+            Thread t = new Thread(runner);
+            threads.add(t);
+            t.start();
         }
-        return allBinned.entrySet().stream().sorted(reverseOrder(comparingByValue())).limit(limit)
+
+        // Wait for all threads to finish.  This isn't optimal since we could start processing
+        // each thread as it finishes.
+        for (Thread t : threads) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                // the interface doesn't throw an exception, so neither can we.
+                e.printStackTrace();
+                System.exit(1);
+            }
+        }
+
+        // Merge all the maps.  Although pathological, we can't merge just the top <limit>
+        // from each - it's conceivable that the <limie+1>th (say) entry is common to each and
+        // would get bumped into the top list
+        Map<Long, Long> collected = new LinkedHashMap<Long, Long>();
+        for (Map<Long, Long> binned : allBinned) {
+            collected = Stream.concat(collected.entrySet().stream(), binned.entrySet().stream())
+                    .collect(toMap(e -> e.getKey(), e -> e.getValue(), Long::sum));
+        }
+
+        return collected.entrySet().stream().sorted(reverseOrder(comparingByValue())).limit(limit)
                 .map(e -> e.getKey().toString()).collect(joining(","));
 
     }

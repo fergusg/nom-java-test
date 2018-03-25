@@ -20,11 +20,11 @@ public class Main {
 
         // Construct four producers which different seeds to produce different values
         // final int producerSize = 100_000_000;
-        final int producerSize = 10_000_000;
+        final int producerSize = 100_000_000;
         final Producer producer1 = new Producer(producerSize, 1);
         final Producer producer2 = new Producer(producerSize, 2);
-        // final Producer producer3 = new Producer(producerSize, 3);
-        // final Producer producer4 = new Producer(producerSize, 4);
+        final Producer producer3 = new Producer(producerSize, 3);
+        final Producer producer4 = new Producer(producerSize, 4);
 
         // Get the counter implementation.
         final Counter counter = getCounter();
@@ -32,10 +32,9 @@ public class Main {
         if (counter != null) {
             // Set the number of values to return to 1000, this will be much less than the number of unique values given
             // by the producers
-            final int limit = 10;
+            final int limit = 1000;
             final long start = System.currentTimeMillis();
-            // System.out.println(counter.getTop(limit, producer1, producer2, producer3, producer4));
-            System.out.println(counter.getTop(limit, producer1, producer2));
+            System.out.println(counter.getTop(limit, producer1, producer2, producer3, producer4));
             System.out.println("Runtime: " + (System.currentTimeMillis() - start) + "ms");
         }
 
