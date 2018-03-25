@@ -21,9 +21,11 @@ public class MyCounter implements Counter {
     /**
      * Here is the pain
      */
-    public Map<Long, Long> bin(Stream<Long> stream) {
+    public Map<Long, Long> bin(Producer producer) {
         final long start = System.currentTimeMillis();
-        Map<Long, Long> result = stream
+        // ProducerIterator is a trivial wrapper to implement Iterator
+        Iterable<Long> producerIterator = () -> new ProducerIterator(producer);
+        Map<Long, Long> result = stream(producerIterator.spliterator(), false)
                 .collect(groupingBy(identity(), mapping(initial -> 1, summingLong(i -> i.longValue()))));
         System.out.println("bin: " + (System.currentTimeMillis() - start) + "ms");
         return result;
@@ -35,14 +37,11 @@ public class MyCounter implements Counter {
         ArrayList<Thread> threads = new ArrayList<Thread>();
 
         // for efficiency, assumes #cores > #producers
-        for (Producer rawProducer : producers) {
+        for (Producer producer : producers) {
             Runnable runner = () -> {
-                // ProducerIterator is a trivial wrapper to implement Iterator
-                Iterable<Long> producer = () -> new ProducerIterator(rawProducer);
                 // The double streaming is probably unneccesary.
-                Map<Long, Long> binned = bin(stream(producer.spliterator(), false)) // Bin
-                        .entrySet() // Key-Values
-                        .stream()
+                Map<Long, Long> binned = bin(producer) // Bin
+                        .entrySet().stream()
                         .collect(toMap(Entry::getKey, Entry::getValue, (key, value) -> key, LinkedHashMap::new));
                 synchronized (allBinned) {
                     allBinned.add(binned);
