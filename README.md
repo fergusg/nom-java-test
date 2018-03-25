@@ -27,6 +27,4 @@ Initially I set myself a ~2hr limit, but being very rusty and out-of-date in Jav
 
 1. Most glaring inefficiency is that we wait for **all** threads to finish before starting the merge.  In this case it's not too bad since all threads execute in about the same time. Also, the merge step is *relatively* quick.
 
-1. We could seek to remove the second `stream` in `bin()`.  This is more for code neatness as I strongly suspect the performance overhead is relatively small.
-
 1. In this CPU-limited application, it seems probable that this works best when the number of threads isn't greater than the number of (idle) cores, so that at most 1 thread executes in each core (to minimise context switching).  At scale, we might use a more sophisticated strategy such as those provided in `java.util.concurrent`.  If I/O were to be a limit (even partially), all bets are off.
