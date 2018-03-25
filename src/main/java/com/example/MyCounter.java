@@ -16,7 +16,17 @@ import static java.util.stream.StreamSupport.stream;
 
 public class MyCounter implements Counter {
 
-    public String getTop(int limit, Producer ...producers) {
+    public String getTop(int limit, Producer... producers) {
+        try {
+            return this._getTop(limit, producers);
+        } catch (InterruptedException e) {
+            // the interface doesn't throw an exception, so neither can we.
+            e.printStackTrace();
+            throw new RuntimeException("Ouch");
+        }
+    }
+
+    private String _getTop(int limit, Producer... producers) throws InterruptedException {
 
         ArrayList<Map<Long, Long>> allBinned = new ArrayList<Map<Long, Long>>();
         ArrayList<Thread> threads = new ArrayList<Thread>();
@@ -24,7 +34,7 @@ public class MyCounter implements Counter {
         // for efficiency, assumes #cores > #producers
         for (Producer producer : producers) {
             Runnable runner = () -> {
-                Map<Long, Long> binned = bin(producer);
+                Map<Long, Long> binned = _bin(producer);
                 synchronized (allBinned) {
                     allBinned.add(binned);
                 }
@@ -37,13 +47,7 @@ public class MyCounter implements Counter {
         // Wait for all threads to finish.  This isn't optimal since we could start processing
         // each thread as it finishes.
         for (Thread t : threads) {
-            try {
-                t.join();
-            } catch (InterruptedException e) {
-                // the interface doesn't throw an exception, so neither can we.
-                e.printStackTrace();
-                throw new RuntimeException("Ouch");
-            }
+            t.join();
         }
 
         // Merge all the maps.  Although pathological, we can't merge just the top <limit>
@@ -63,7 +67,7 @@ public class MyCounter implements Counter {
     /**
      * Here is the pain
      */
-    private Map<Long, Long> bin(Producer producer) {
+    private Map<Long, Long> _bin(Producer producer) {
         final long start = System.currentTimeMillis();
         try {
             // ProducerIterator is a trivial wrapper to implement Iterator
