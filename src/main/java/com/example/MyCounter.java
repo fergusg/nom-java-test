@@ -67,10 +67,10 @@ public class MyCounter implements Counter {
         // Merge all the maps.  Although pathological, we can't merge just the top <limit>
         // from each - it's conceivable that the <limit+1>th (say) entry is common to each and
         // would get bumped into the top list
-        Map<Long, Long> collected = new LinkedHashMap<Long, Long>();
+        LinkedHashMap<Long, Long> collected = new LinkedHashMap<Long, Long>();
         for (Map<Long, Long> binned : allBinned) {
             collected = Stream.concat(collected.entrySet().stream(), binned.entrySet().stream())
-                    .collect(toMap(e -> e.getKey(), e -> e.getValue(), Long::sum));
+                    .collect(toMap(e -> e.getKey(), e -> e.getValue(), Long::sum, LinkedHashMap::new));
         }
 
         return collected.entrySet().stream().sorted(reverseOrder(comparingByValue())).limit(limit)
