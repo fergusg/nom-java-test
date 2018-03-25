@@ -17,6 +17,8 @@ import static java.util.stream.StreamSupport.stream;
 
 public class MyCounter implements Counter {
 
+
+
     /**
      * Here is the pain
      */
@@ -32,11 +34,11 @@ public class MyCounter implements Counter {
         // ProducerIterator is a trivial wrapper to implement Iterator
         Iterable<Long> producer = () -> new ProducerIterator(producers[0]); // <--- just 1st
 
-        Map<Long, Long> binned = bin(stream(producer.spliterator(), false));
-
-        Map<Long, Long> topN = binned.entrySet().stream().sorted(reverseOrder(comparingByValue())).limit(limit)
+        Map<Long, Long> binned = bin(stream(producer.spliterator(), false))
+                .entrySet().stream()
                 .collect(toMap(Entry::getKey, Entry::getValue, (key, value) -> key, LinkedHashMap::new));
 
-        return topN.keySet().stream().map(e -> e.toString()).collect(joining(","));
+        return binned.entrySet().stream().sorted(reverseOrder(comparingByValue())).limit(limit)
+                .map(e -> e.getKey().toString()).collect(joining(","));
     }
 }
