@@ -19,8 +19,7 @@ public class Main {
         }
 
         // Construct four producers which different seeds to produce different values
-        // final int producerSize = 100_000_000;
-        final int producerSize = 100_000_000;
+        int producerSize = 100_000_000;
         final Producer producer1 = new Producer(producerSize, 1);
         final Producer producer2 = new Producer(producerSize, 2);
         final Producer producer3 = new Producer(producerSize, 3);
@@ -32,10 +31,19 @@ public class Main {
         if (counter != null) {
             // Set the number of values to return to 1000, this will be much less than the number of unique values given
             // by the producers
-            final int limit = 1000;
+            int limit = 1000;
             final long start = System.currentTimeMillis();
-            System.out.println(counter.getTop(limit, producer1, producer2, producer3, producer4));
+            final String top = counter.getTop(limit, producer1, producer2, producer3, producer4);
+            System.out.println(top);
             System.out.println("Runtime: " + (System.currentTimeMillis() - start) + "ms");
+            if (limit >= 10 && producerSize == 10_000_000) {
+                assert (top.startsWith(
+                        "-4964420948893066024,-4959463499243013640,-4961115986754665064,-4969378402838085704"));
+            }
+            if (limit >= 10 && producerSize == 100_000_000) {
+                assert (top.startsWith(
+                        "-4964420948893066024,-4969378402838085704,-4959463499243013640,-4961115986754665064"));
+            }
         }
 
     }
