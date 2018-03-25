@@ -39,7 +39,10 @@ public class MyCounter implements Counter {
             Runnable runner = () -> {
                 // ProducerIterator is a trivial wrapper to implement Iterator
                 Iterable<Long> producer = () -> new ProducerIterator(rawProducer);
-                Map<Long, Long> binned = bin(stream(producer.spliterator(), false)).entrySet().stream()
+                // The double streaming is probably unneccesary.
+                Map<Long, Long> binned = bin(stream(producer.spliterator(), false)) // Bin
+                        .entrySet() // Key-Values
+                        .stream()
                         .collect(toMap(Entry::getKey, Entry::getValue, (key, value) -> key, LinkedHashMap::new));
                 synchronized (allBinned) {
                     allBinned.add(binned);
@@ -63,7 +66,7 @@ public class MyCounter implements Counter {
         }
 
         // Merge all the maps.  Although pathological, we can't merge just the top <limit>
-        // from each - it's conceivable that the <limie+1>th (say) entry is common to each and
+        // from each - it's conceivable that the <limit+1>th (say) entry is common to each and
         // would get bumped into the top list
         Map<Long, Long> collected = new LinkedHashMap<Long, Long>();
         for (Map<Long, Long> binned : allBinned) {
