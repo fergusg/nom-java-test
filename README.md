@@ -19,13 +19,13 @@ Nor any proper benchmarking.  Ran out of time.  On my PC, 1 Producer ~ 22s, all 
 
 ~ 3.5hrs
 
-Initially I set myself a ~hr limit, but being very rusty and out-of-date in Java (e.g.,I've never setup maven before.)  In 2hrs I was able to get the pipeline working for a single producer.  It took me another hour to add multi-threading, plus an extra 30mins to tidy up, etc.
+Initially I set myself a ~1hr limit, but being very rusty and out-of-date in Java (e.g., I've never setup maven before.)  In 2hrs I was able to get the pipeline working for a single producer.  It took me another hour to add multi-threading, plus an extra 30mins to tidy up, etc.
 
 ## Comments
 
 1. I wasted lots of time trying to optimized the final merge, not properly appreciating that the producer step is the slow bit.
 
-1. Most glaring inefficiency is that we wait for **all** threads to finish before starting the merge.  In this case it's not too bad since all threads execute in about the same time. Also, the merge step *relatively* quick.
+1. Most glaring inefficiency is that we wait for **all** threads to finish before starting the merge.  In this case it's not too bad since all threads execute in about the same time. Also, the merge step is *relatively* quick.
 
 1. We could seek to remove the second `stream` in `bin()`.  This is more for code neatness as I strongly suspect the performance overhead is relatively small.
 
