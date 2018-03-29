@@ -36,16 +36,11 @@ public class Main {
             final String top = counter.getTop(limit, producer1, producer2, producer3, producer4);
             System.out.println(top);
             System.out.println("Runtime: " + (System.currentTimeMillis() - start) + "ms");
-            if (limit >= 10 && producerSize == 10_000_000) {
+            if (producerSize == 100_000_000) {
                 assert (top.startsWith(
-                        "-4964420948893066024,-4959463499243013640,-4961115986754665064,-4969378402838085704"));
-            }
-            if (limit >= 10 && producerSize == 100_000_000) {
-                assert (top.startsWith(
-                        "-4964420948893066024,-4969378402838085704,-4959463499243013640,-4961115986754665064"));
+                        "-4964420948893066024:1529,-4969378402838085704:1503,-4959463499243013640:1480,-4961115986754665064:1475"));
             }
         }
-
     }
 
     /**

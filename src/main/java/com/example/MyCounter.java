@@ -1,7 +1,7 @@
 package com.example;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -53,14 +53,14 @@ public class MyCounter implements Counter {
         // Merge all the maps.  Although pathological, we can't merge just the top <limit>
         // from each - it's conceivable that the <limit+N>th (say) entry is common to each and
         // would get bumped into the top list
-        LinkedHashMap<Long, Long> collected = new LinkedHashMap<Long, Long>();
+        Map<Long, Long> collected = new HashMap<Long, Long>();
         for (Map<Long, Long> binned : allBinned) {
             collected = Stream.concat(collected.entrySet().stream(), binned.entrySet().stream())
-                    .collect(toMap(e -> e.getKey(), e -> e.getValue(), Long::sum, LinkedHashMap::new));
+                    .collect(toMap(e -> e.getKey(), e -> e.getValue(), Long::sum));
         }
 
         return collected.entrySet().stream().sorted(reverseOrder(comparingByValue())).limit(limit)
-                .map(e -> e.getKey().toString()).collect(joining(","));
+                .map(e -> e.getKey() + ":" + e.getValue()).collect(joining(","));
 
     }
 
